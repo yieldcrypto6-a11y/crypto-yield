@@ -44,9 +44,36 @@ app.use((err, req, res, next) => {
   next();
 });
 
-mongoose.connect(process.env.MONGO_URI).then(() => {
+let mongoConnected = false;
+
+async function connectMongoDB() {
+  if (mongoConnected || mongoose.connection.readyState === 1) {
+    mongoConnected = true;
+    return;
+  }
+
+  await mongoose.connect(process.env.MONGO_URI);
+  mongoConnected = true;
   console.log("MongoDB connected");
-  app.listen(process.env.PORT || 5000, () => console.log("API running"));
-  // No cron job here anymore: daily payouts are triggered explicitly by an admin
-  // entering the real day's P&L via POST /api/admin/daily-pnl, see jobs/dailyPnl.js
-}).catch(err => { console.error(err); process.exit(1); });
+}
+
+// Make sure MongoDB is connected before handling API requests.
+app.use(async (req, res, next) => {
+  try {
+    await connectMongoDB();
+    next();
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+    next(err);
+  }
+});
+
+// Vercel uses the exported Express app.
+// For local development, start the normal Express server.
+if (process.env.VERCEL !== "1") {
+  app.listen(process.env.PORT || 5000, () => {
+    console.log("API running");
+  });
+}
+
+export default app;
