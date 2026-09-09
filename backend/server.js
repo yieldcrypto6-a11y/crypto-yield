@@ -26,11 +26,11 @@ app.use(geoRestrict);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-let mongoConnected = false;
+let mongoConnectionPromise = null;
 
 async function connectMongoDB() {
-  if (mongoConnected || mongoose.connection.readyState === 1) {
-    mongoConnected = true;
+  // 1 = connected
+  if (mongoose.connection.readyState === 1) {
     return;
   }
 
@@ -38,10 +38,22 @@ async function connectMongoDB() {
     throw new Error("MONGO_URI is not configured");
   }
 
-  await mongoose.connect(process.env.MONGO_URI);
+  // Reuse an existing connection attempt if one is already running.
+  if (!mongoConnectionPromise) {
+    mongoConnectionPromise = mongoose
+      .connect(process.env.MONGO_URI, {
+        serverSelectionTimeoutMS: 10000
+      })
+      .then(() => {
+        console.log("MongoDB connected");
+      })
+      .catch((err) => {
+        mongoConnectionPromise = null;
+        throw err;
+      });
+  }
 
-  mongoConnected = true;
-  console.log("MongoDB connected");
+  await mongoConnectionPromise;
 }
 
 // Make sure MongoDB is connected BEFORE API routes run.
