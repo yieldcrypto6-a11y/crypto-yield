@@ -18,13 +18,13 @@ router.use(protect, adminOnly);
 
 /* ---------------- Stats ---------------- */
 router.get("/stats", async (req, res) => {
-  const [users, activePackages, payments, withdrawals, pendingPayments] = await Promise.all([
-    User.countDocuments({ role: "user" }),
-    UserPackage.countDocuments({ status: "active" }),
-    Payment.aggregate([{ $match: { status: "confirmed" } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
-    Withdrawal.aggregate([{ $match: { status: "pending" } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
-    Payment.countDocuments({ status: "pending" })
-  ]);
+const [users, activePackages, payments, withdrawals, pendingPayments] = await Promise.all([
+  User.countDocuments({ role: "user" }),
+  Package.countDocuments({ status: "active" }),
+  Payment.aggregate([{ $match: { status: "confirmed" } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
+  Withdrawal.aggregate([{ $match: { status: "pending" } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
+  Payment.countDocuments({ status: "pending" })
+]);
   res.json({
     users,
     activePackages,
