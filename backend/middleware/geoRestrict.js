@@ -15,9 +15,10 @@ import geoip from "geoip-lite";
 //    a determined bad actor.
 //  - This checks the request's source IP. If you deploy behind a CDN/proxy
 //    (Cloudflare, Nginx, a PaaS load balancer), you MUST configure Express's
-//    "trust proxy" setting and ensure X-Forwarded-For is set correctly, or
-//    every request will appear to come from your proxy's IP instead of the
-//    real visitor — which would either block everyone or let everyone through.
+//    "trust proxy" setting (already done in server.js) and ensure
+//    X-Forwarded-For is set correctly by that proxy, or every request will
+//    appear to come from the proxy's IP instead of the real visitor — which
+//    would either block everyone or let everyone through.
 //  - This is a soft geofence for audience/marketing purposes, not a security
 //    or legal-compliance control. Don't rely on it alone if a specific
 //    jurisdiction's law requires verified geo-restriction.

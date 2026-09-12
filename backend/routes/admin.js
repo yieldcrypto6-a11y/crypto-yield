@@ -89,17 +89,16 @@ router.post("/packages", async (req, res) => res.status(201).json(await Package.
 router.patch("/packages/:id", async (req, res) => res.json(await Package.findByIdAndUpdate(req.params.id, req.body, { new: true })));
 router.delete("/packages/:id", async (req, res) => {
   // Hard-deleting a package that's already been bought orphans any Payment or
-  // UserPackage that references it (which is exactly what caused the crash
-  // you hit — a confirmed/pending payment pointing at a package that no
-  // longer exists). Block deletion in that case and point to Deactivate instead,
-  // which keeps the package hidden from new buyers without breaking history.
+  // UserPackage that references it, which crashes payment confirmation later
+  // (payment.package populates to null). Block deletion in that case and
+  // point to Deactivate instead, which keeps history intact.
   const [hasPayments, hasUserPackages] = await Promise.all([
     Payment.exists({ package: req.params.id }),
     UserPackage.exists({ package: req.params.id })
   ]);
   if (hasPayments || hasUserPackages) {
     return res.status(400).json({
-      message: "This package has existing payments or active/past purchases and can't be deleted. Use \"Deactivate\" instead to hide it from new buyers."
+      message: "This package has existing payments or purchases and can't be deleted. Use \"Deactivate\" instead to hide it from new buyers."
     });
   }
   await Package.findByIdAndDelete(req.params.id);
@@ -129,6 +128,15 @@ router.patch("/payments/:id", async (req, res) => {
   if (!payment) return res.status(404).json({ message: "Payment not found" });
   if (payment.status !== "pending") return res.status(400).json({ message: "This payment was already reviewed" });
 
+  // Check this BEFORE saving the payment as "confirmed" — otherwise a missing
+  // package would leave the payment permanently stuck in a broken confirmed
+  // state with no way to retry (since a non-pending payment can't be reviewed again).
+  if (status === "confirmed" && !payment.package) {
+    return res.status(400).json({
+      message: "This payment's package no longer exists (it may have been deleted). Please reject this payment and ask the user to resubmit against a current package."
+    });
+  }
+
   payment.status = status;
   payment.adminRemarks = adminRemarks;
   payment.reviewedBy = req.user._id;
@@ -137,11 +145,6 @@ router.patch("/payments/:id", async (req, res) => {
 
   if (status === "confirmed") {
     const pkg = payment.package;
-    if (!pkg) {
-      return res.status(400).json({
-        message: "This payment's package no longer exists (it may have been deleted). Please reject this payment and ask the user to resubmit against a current package."
-      });
-    }
     const settings = await PlatformSettings.getSettings();
 
     // Income never starts the day it's activated — it starts the platform's

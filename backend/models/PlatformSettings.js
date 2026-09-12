@@ -11,7 +11,7 @@ import mongoose from "mongoose";
 //   which calendar day a given daily P&L entry applies to.
 const schema = new mongoose.Schema({
   key: { type: String, default: "singleton", unique: true },
-  investorShareRate: { type: Number, default: 50 }, // % of P&L
+  investorShareRate: { type: Number, default: 75 }, // % of P&L
   referralShareRate: { type: Number, default: 20 }, // % of P&L (profit days only)
   timezoneOffsetHours: { type: Number, default: 1 }
 }, { timestamps: true });

@@ -27,10 +27,8 @@ function fullPhone(countryCode, phone) {
 }
 
 /* ---------------- Registration: email OR phone (no OTP) ---------------- */
-// Note: phone numbers are NOT verified at signup. If you want phone
-// verification back later, see the previous WhatsApp OTP implementation
-// (backend/utils/otp.js, models/OtpCode.js) — it was intentionally removed
-// here to avoid per-message WhatsApp/SMS costs.
+// Phone numbers are NOT verified at signup — intentionally, to avoid
+// per-message SMS/WhatsApp costs.
 
 router.post("/register", async (req, res) => {
   const { name, email, password, referralCode, countryCode, phone } = req.body;

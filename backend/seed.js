@@ -54,18 +54,23 @@ if (existingPackages > 0) {
 } else {
   // Packages carry no fixed/guaranteed rate — every active package earns a share
   // of the platform's REAL daily trading result (see PlatformSettings + DailyPnl).
-  // investorShareOverride: null = use the platform default share rate; a tier can
-  // optionally get a bigger share of real P&L via a non-null override.
+  // investorShareOverride left null on every tier so they all follow the
+  // platform default (Admin → Daily P&L → Settings) uniformly. Edit each
+  // plan's price, name, features, badge and override anytime in Admin → Packages.
   await Package.insertMany([
     { name: "Starter", price: 50, durationDays: 30, description: "Perfect entry point into real profit-sharing.", features: ["Share of real daily trading P&L", "30-day cycle", "24/7 support"], color: "cyan" },
     { name: "Basic", price: 250, durationDays: 30, description: "Our most popular plan for steady growth.", features: ["Share of real daily trading P&L", "30-day cycle", "Priority support"], badge: "Most Popular", color: "purple" },
-    { name: "Premium", price: 1000, durationDays: 30, investorShareOverride: 55, description: "A larger share of real daily results for serious investors.", features: ["Higher profit share", "30-day cycle", "Dedicated account manager"], badge: "Best Value", color: "gold" },
-    { name: "VIP", price: 5000, durationDays: 30, investorShareOverride: 60, description: "Our top-tier plan with the largest share of real daily results.", features: ["Highest profit share", "30-day cycle", "VIP dedicated line", "Early access to new plans"], badge: "VIP", color: "emerald" }
+    { name: "Growth", price: 500, durationDays: 30, description: "A step up for investors ready to scale their capital.", features: ["Share of real daily trading P&L", "30-day cycle", "Priority support"], color: "indigo" },
+    { name: "Premium", price: 1000, durationDays: 30, description: "For serious investors who want a larger position.", features: ["Share of real daily trading P&L", "30-day cycle", "Dedicated account manager"], badge: "Best Value", color: "gold" },
+    { name: "VIP", price: 5000, durationDays: 30, description: "Our top-tier plan for maximum capital deployment.", features: ["Share of real daily trading P&L", "30-day cycle", "VIP dedicated line", "Early access to new plans"], badge: "VIP", color: "emerald" }
   ]);
-  console.log("Default package tiers created (edit prices/rates anytime in Admin → Packages).");
+  console.log("5 default package tiers created (edit prices/rates/badges anytime in Admin → Packages).");
 }
 
 console.log("\nSetup complete.");
 console.log("NEXT STEP (required before going live): add your real crypto deposit");
 console.log("addresses in Admin → Deposit Addresses. None are seeded by default.");
+console.log("Also confirm your profit-share rates in Admin → Daily P&L → Settings —");
+console.log("set Investor Share and Referral Share to whatever split you've decided");
+console.log("(e.g. 75% investor / 20% referral). The code default is 50%/20% until changed there.");
 await mongoose.disconnect();

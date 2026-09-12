@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import { FiPlayCircle, FiInfo } from "react-icons/fi";
 
 // The tutorial video is served directly from this backend, not YouTube/Vimeo.
-// Drop your video file at: backend/uploads/tutorial/tutorial.mp4
-// (create the "tutorial" folder if it doesn't exist yet) — it will then be
-// reachable at this exact path, since /uploads is already served statically
-// by the backend (see backend/server.js). To use a different filename, just
-// change VIDEO_SRC below to match.
+// Video file lives at: backend/uploads/tutorial/tutorial.mp4
+// It's reachable at this exact path because /uploads is already served
+// statically by the backend (see backend/server.js). To use a different
+// filename, just change VIDEO_SRC below to match.
 const VIDEO_SRC = "/uploads/tutorial/tutorial.mp4";
 
 export default function Tutorial() {
