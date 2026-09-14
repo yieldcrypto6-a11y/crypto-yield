@@ -18,18 +18,78 @@ router.use(protect, adminOnly);
 
 /* ---------------- Stats ---------------- */
 router.get("/stats", async (req, res) => {
-  const [users, activePackages, payments, withdrawals, pendingPayments] = await Promise.all([
-    User.countDocuments({ role: "user" }),
-    Package.countDocuments({ status: "active" }),UserPackage.countDocuments({ status: "active" }),
-    Payment.aggregate([{ $match: { status: "confirmed" } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
-    Withdrawal.aggregate([{ $match: { status: "pending" } }, { $group: { _id: null, total: { $sum: "$amount" } } }]),
-    Payment.countDocuments({ status: "pending" })
-  ]);
-  res.json({
+  const [
     users,
     activePackages,
+    activeUserPackages,
+    payments,
+    withdrawals,
+    pendingPayments
+  ] = await Promise.all([
+    User.countDocuments({ role: "user" }),
+
+    // Number of active packages in the package catalog
+    Package.countDocuments({ status: "active" }),
+
+    // Number of packages currently owned by users
+    UserPackage.countDocuments({ status: "active" }),
+
+    // Total amount from CONFIRMED investment payments
+    Payment.aggregate([
+      {
+        $match: {
+          status: "confirmed"
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: "$amount"
+          }
+        }
+      }
+    ]),
+
+    // Total amount of actual PENDING WITHDRAWAL requests
+    Withdrawal.aggregate([
+      {
+        $match: {
+          status: "pending"
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total: {
+            $sum: "$amount"
+          }
+        }
+      }
+    ]),
+
+    // Number of investment payments still awaiting admin review
+    Payment.countDocuments({
+      status: "pending"
+    })
+  ]);
+
+  res.json({
+    users,
+
+    // Package catalog count
+    activePackages,
+
+    // Kept internally available for future dashboard use
+    activeUserPackages,
+
+    // CONFIRMED investment money
     totalInvestments: payments[0]?.total || 0,
+
+    // ACTUAL pending withdrawal requests
     pendingWithdrawals: withdrawals[0]?.total || 0,
+
+    // Investment payments awaiting review
     pendingPayments
   });
 });
